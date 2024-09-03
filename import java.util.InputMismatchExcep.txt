@@ -1,0 +1,182 @@
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
+// Abstract 
+abstract class Player {
+    protected char symbol;
+
+    public Player(char symbol) {
+        this.symbol = symbol;
+    }
+
+    public char getSymbol() {
+        return symbol;
+    }
+
+    public abstract void makeMove(Board board);
+}
+
+// Inheritance and Polymorphism
+class HumanPlayer extends Player {
+    private Scanner scanner;
+
+    public HumanPlayer(char symbol, Scanner scanner) {
+        super(symbol);
+        this.scanner = scanner;
+    }
+
+    @Override
+    public void makeMove(Board board) {
+        int row, col;
+        while (true) {
+            try {
+                System.out.print("Enter row (1, 2, 3): ");
+                row = scanner.nextInt() - 1;
+                System.out.print("Enter column (1, 2, 3): ");
+                col = scanner.nextInt() - 1;
+
+                if (row >= 0 && row < 3 && col >= 0 && col < 3 && board.isValidMove(row, col)) {
+                    board.placeSymbol(row, col, getSymbol());
+                    break;
+                } else {
+                    System.out.println("Invalid move! Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input! Please enter numbers only.");
+                scanner.next(); 
+            }
+        }
+    }
+}
+
+// Encapsulation and Abstraction
+class Board {
+    private char[][] board;
+
+    public Board() {
+        board = new char[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                board[i][j] = '-';
+            }
+        }
+    }
+
+    public void display() {
+        System.out.println();
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                System.out.print(board[i][j]);
+                if (j < 2) System.out.print(" | ");
+            }
+            System.out.println();
+            if (i < 2) System.out.println("---------");
+        }
+    }
+
+    public boolean isValidMove(int row, int col) {
+        return row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == '-';
+    }
+
+    public void placeSymbol(int row, int col, char symbol) {
+        board[row][col] = symbol;
+    }
+
+    public boolean isFull() {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == '-') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean checkWin(char symbol) {
+        return (checkRows(symbol) || checkColumns(symbol) || checkDiagonals(symbol));
+    }
+
+    private boolean checkRows(char symbol) {
+        for (int i = 0; i < 3; i++) {
+            if (board[i][0] == symbol && board[i][1] == symbol && board[i][2] == symbol) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkColumns(char symbol) {
+        for (int i = 0; i < 3; i++) {
+            if (board[0][i] == symbol && board[1][i] == symbol && board[2][i] == symbol) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkDiagonals(char symbol) {
+        return (board[0][0] == symbol && board[1][1] == symbol && board[2][2] == symbol) ||
+               (board[0][2] == symbol && board[1][1] == symbol && board[2][0] == symbol);
+    }
+}
+
+//Encapsulation and Abstraction
+class TicTacToeGame {
+    private Board board;
+    private Player player1;
+    private Player player2;
+    private Player currentPlayer;
+
+    public TicTacToeGame(Player player1, Player player2) {
+        this.board = new Board();
+        this.player1 = player1;
+        this.player2 = player2;
+        this.currentPlayer = player1;
+    }
+
+    public void play() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome to Tic-Tac-Toe!");
+        while (true) {
+            board.display();
+            System.out.println("Player " + currentPlayer.getSymbol() + "'s turn:");
+            currentPlayer.makeMove(board);
+
+            if (board.checkWin(currentPlayer.getSymbol())) {
+                board.display();
+                System.out.println("Player " + currentPlayer.getSymbol() + " wins!");
+                break;
+            }
+
+            if (board.isFull()) {
+                board.display();
+                System.out.println("It's a tie!");
+                break;
+            }
+
+            currentPlayer = (currentPlayer == player1) ? player2 : player1;
+        }
+
+        System.out.print("\nDo you want to play again? (y/n): ");
+        String choice = scanner.next();
+        if (choice.equalsIgnoreCase("y")) {
+            new TicTacToeGame(player1, player2).play();
+        } else {
+            System.out.println("Thanks for playing!");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Tic-Tac-Toe Game");
+        Player player1 = new HumanPlayer('X', scanner);
+        Player player2 = new HumanPlayer('O', scanner);
+
+        TicTacToeGame game = new TicTacToeGame(player1, player2);
+        game.play();
+    }
+}
